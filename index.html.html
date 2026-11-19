@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>mypic – 90s Film Camera</title>
+<style>
+:root{--bg:#14110f;--panel:#1e1a17;--ink:#f3e9d8;--mute:#9b8f80;--acc:#ffb02e;--line:#2d2722;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS",system-ui,sans-serif;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+.logo{font:italic 700 22px Georgia,serif;letter-spacing:.5px}
+.logo b{color:var(--acc)}
+.ib{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:18px;display:grid;place-items:center;cursor:pointer}
+.ib:active{transform:scale(.92)}
+#stage{flex:1;min-height:0;display:grid;place-items:center;padding:0 12px;position:relative}
+#view{max-width:100%;max-height:100%;aspect-ratio:3/4;border-radius:10px;background:#000;box-shadow:0 0 0 2px var(--line)}
+#fname{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(20,17,15,.75);padding:5px 12px;border-radius:20px;font-size:13px;white-space:nowrap}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
+#msg{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:var(--acc);color:#1a1208;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;width:max-content;max-width:90%;text-align:center}
+#strip{display:flex;gap:8px;overflow-x:auto;padding:12px 14px;scrollbar-width:none}
+#strip::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:8px 13px;border-radius:18px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font-size:13px;cursor:pointer}
+.chip.on{background:var(--acc);color:#1a1208;border-color:var(--acc);font-weight:700}
+#bar{display:flex;align-items:center;justify-content:space-around;padding:4px 16px 16px}
+#thumb{width:52px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--panel) center/cover;cursor:pointer;color:var(--mute);display:grid;place-items:center;font-size:20px}
+#shut{width:76px;height:76px;border-radius:50%;border:4px solid var(--ink);background:var(--acc);box-shadow:inset 0 0 0 5px var(--bg);cursor:pointer}
+#shut:active{transform:scale(.92)}
+#gal{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:5;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#gal.open{display:flex}
+#gal .top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;max-width:560px;width:100%;margin:0 auto}
+#grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;max-width:560px;width:100%;margin:0 auto;align-content:start}
+#grid img{width:100%;aspect-ratio:3/4;object-fit:cover;cursor:pointer;border-radius:4px}
+#empty{text-align:center;color:var(--mute);padding:60px 24px;grid-column:1/-1}
+#big{position:fixed;inset:0;background:rgba(10,8,7,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:6;padding:16px}
+#big.open{display:flex}
+#big img{max-width:100%;max-height:72%;border-radius:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{padding:11px 18px;border-radius:24px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:14px;cursor:pointer}
+.btn.p{background:var(--acc);color:#1a1208;border-color:var(--acc);font-weight:700}
+#modes{display:flex;justify-content:center;gap:6px;padding-top:8px}
+.mt{padding:7px 18px;border-radius:18px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font-size:14px;cursor:pointer}
+.mt.on{color:var(--ink);border-color:var(--acc)}
+#shut.vid{background:#e5352b}
+#shut.rec{border-radius:24px}
+#rec{position:absolute;top:10px;right:20px;background:#e5352b;color:#fff;padding:5px 11px;border-radius:16px;font-size:13px;font-weight:700;display:none}
+#allow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;display:none;width:min(78%,300px);background:rgba(20,17,15,.92);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center;font-size:14px}
+#allow p{margin:0 0 6px}
+#allow button{display:block;width:100%;margin-top:8px}
+#big video{max-width:100%;max-height:72%;border-radius:8px;display:none}
+.cell{position:relative}
+.pb{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.6);color:#fff;border-radius:10px;padding:1px 7px;font-size:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">my<b>pic</b></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="flip" aria-label="Switch front or back camera" style="padding:8px 14px;font-size:13px">⟲ Front / Back</button>
+    </div>
+  </header>
+  <div id="stage">
+    <canvas id="view" width="360" height="480"></canvas>
+    <div id="fname"></div><div id="rec"></div><div id="allow"><p>Live camera is blocked in this view. You can still take photos and videos:</p><button class="btn p" id="ncam">📷 Use phone camera</button><button class="btn" id="tryl">Retry live camera</button><button class="btn" id="full">Open in full page</button></div><div id="flash"></div><div id="msg"></div>
+  </div>
+  <div id="modes"><button class="mt on" data-m="photo">Photo</button><button class="mt" data-m="video">Video</button></div>
+  <div id="strip"></div>
+  <div id="bar">
+    <button id="thumb" aria-label="Open gallery">▦</button>
+    <button id="shut" aria-label="Take photo"></button>
+    <button class="ib" id="up" aria-label="Choose a photo" style="width:52px;height:52px">＋</button>
+    <input type="file" id="file" accept="image/*" hidden>
+  </div>
+</div>
+
+<div id="gal">
+  <div class="top"><b style="font-size:18px">Gallery</b><button class="btn" id="gx">Close</button></div>
+  <div id="grid"></div>
+</div>
+<div id="big">
+  <img id="bimg" alt="Saved photo"><video id="bvid" controls playsinline></video>
+  <div class="row">
+    <button class="btn p" id="bshare">Save to phone / Share</button>
+    <button class="btn" id="bdel">Delete</button>
+    <button class="btn" id="bx">Back</button>
+  </div>
+</div>
+
+<script>
+// name, params: b brightness, c contrast, s saturation, r/g/l channel gains, f fade, gr grain, v vignette, sp sepia, so soft, lk leak, du dust, sc scanlines, fl flash, dt date, fr frame
+const D={b:1,c:1,s:1,r:1,g:1,l:1,f:0,gr:0,v:0,sp:0,so:0,lk:0,du:0,sc:0,fl:0,dt:0,fr:0};
+const F=[
+["Kodak Portra 400",{b:1.05,c:.95,s:.9,r:1.04,l:.96,f:10,gr:.15,v:.1}],
+["Kodak Gold 200",{b:1.05,c:1.05,s:1.2,r:1.1,g:1.03,l:.85,f:8,gr:.2,v:.15}],
+["Fujifilm Superia 400",{c:1.05,s:1.15,r:.96,g:1.06,l:1.03,f:8,gr:.25}],
+["Fuji C200",{c:1.05,s:1.05,r:.97,g:1.02,l:1.07,f:10,gr:.2}],
+["Agfa Vista 400",{c:1.1,s:1.3,r:1.08,g:.97,l:.97,gr:.25,v:.15}],
+["Cinestill 800T",{c:1.1,s:1.05,r:.9,g:.98,l:1.18,gr:.3,v:.2,so:.25}],
+["Kodak Ektar 100",{c:1.2,s:1.45,gr:.08}],
+["Lomography 800",{c:1.3,s:1.3,r:1.05,l:.95,gr:.35,v:.55}],
+["Polaroid SX-70",{b:1.05,c:.9,s:.85,r:1.08,l:.9,f:20,gr:.15,v:.2,fr:1}],
+["Polaroid 600",{c:.95,s:.9,r:.95,g:1.02,l:1.08,f:18,gr:.12,fr:1}],
+["VHS Vintage",{c:.9,s:1.2,r:1.05,l:1.05,f:15,gr:.3,sc:1,so:.3}],
+["VHS Camcorder",{b:1.05,c:1.1,s:1.1,gr:.3,sc:1,dt:2}],
+["Retro Film",{s:.85,r:1.06,l:.9,f:15,gr:.3,v:.3}],
+["90s Flash",{b:1.15,c:1.2,s:1.05,gr:.2,v:.35,fl:1}],
+["Disposable Camera",{c:1.15,s:1.2,r:1.06,l:.92,gr:.4,v:.4,fl:1,dt:1}],
+["Y2K Vintage",{b:1.1,c:1.1,s:.8,r:.95,g:1.02,l:1.12,f:10,so:.3}],
+["1990s Nostalgia",{r:1.07,l:.92,f:15,gr:.25,v:.25,lk:.3}],
+["Film Grain",{c:1.05,gr:.75}],
+["Dust & Scratches",{f:8,gr:.2,du:1,v:.15}],
+["Light Leak",{gr:.15,lk:1,s:1.1}],
+["Date Stamp 1998",{r:1.05,l:.92,gr:.2,dt:1}],
+["Warm Fade",{c:.9,r:1.1,l:.88,f:25,gr:.1}],
+["Faded Memories",{b:1.05,c:.85,s:.6,f:30,gr:.2}],
+["Vintage Sepia",{c:1.05,s:0,sp:.85,f:10,gr:.2,v:.3}],
+["Old Money Film",{c:1.05,s:.8,r:1.03,g:1.01,l:.93,f:12,gr:.2,v:.3}],
+["Analog Dreams",{s:1.05,r:1.04,l:1.08,f:15,so:.4,lk:.6,gr:.2}],
+["Dreamy 90s",{b:1.1,s:1.1,r:1.06,l:1.04,f:15,so:.65,gr:.1}],
+["Retro Chrome",{c:1.3,s:1.1,r:.95,l:1.08,gr:.15,v:.2}],
+["Soft Focus 90s",{b:1.08,f:10,so:.55,gr:.1}],
+["Classic Film Look",{c:1.1,s:1.05,gr:.25,f:8,v:.2}]
+].map(a=>({n:a[0],...D,...a[1]}));
+
+const $=s=>document.querySelector(s);
+const view=$('#view'),vx=view.getContext('2d');
+let cur=0,stream=null,face='environment',vid=document.createElement('video'),img=null,live=false;
+vid.playsInline=true;vid.muted=true;vid.autoplay=true;vid.setAttribute('playsinline','');vid.setAttribute('webkit-playsinline','');
+
+// noise tile for grain
+const nz=document.createElement('canvas');nz.width=nz.height=160;
+{const x=nz.getContext('2d'),d=x.createImageData(160,160);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}x.putImageData(d,0,0)}
+// sample scene used when no camera is available
+const sample=document.createElement('canvas');sample.width=360;sample.height=480;
+{const x=sample.getContext('2d');let g=x.createLinearGradient(0,0,0,480);g.addColorStop(0,'#7db7e8');g.addColorStop(.6,'#f2d9a8');g.addColorStop(.6,'#5d8a4a');g.addColorStop(1,'#35592e');x.fillStyle=g;x.fillRect(0,0,360,480);
+x.fillStyle='#ffd34d';x.beginPath();x.arc(270,90,38,0,7);x.fill();x.fillStyle='#c0504d';x.fillRect(100,250,150,110);x.fillStyle='#6b3a2e';x.beginPath();x.moveTo(90,250);x.lineTo(175,190);x.lineTo(260,250);x.fill();x.fillStyle='#f7f1e3';x.fillRect(155,300,40,60)}
+
+const wc=document.createElement('canvas'),tc=document.createElement('canvas');
+
+function render(c,W,H,f,src,mir){
+  if(c.width!==W)c.width=W;if(c.height!==H)c.height=H;const x=c.getContext('2d');
+  let ox=0,oy=0,iw=W,ih=H;
+  if(f.fr){ox=oy=W*.06;iw=W-2*ox;ih=H-oy-W*.2;x.fillStyle='#f3eee2';x.fillRect(0,0,W,H)}
+  iw=Math.round(iw);ih=Math.round(ih);wc.width=iw;wc.height=ih;
+  const w=wc.getContext('2d',{willReadFrequently:true});
+  const sw=src.videoWidth||src.naturalWidth||src.width,sh=src.videoHeight||src.naturalHeight||src.height;
+  const k=Math.max(iw/sw,ih/sh);
+  w.save();if(mir){w.translate(iw,0);w.scale(-1,1)}
+  w.drawImage(src,(iw-sw*k)/2,(ih-sh*k)/2,sw*k,sh*k);w.restore();
+  // colour grading
+  const d=w.getImageData(0,0,iw,ih),p=d.data,fd=f.f/255,sp=f.sp;
+  const mr=f.b*f.r,mg=f.b*f.g,mb=f.b*f.l,ct=f.c;
+  for(let i=0;i<p.length;i+=4){
+    let r=p[i]*mr,g=p[i+1]*mg,b=p[i+2]*mb;
+    r=(r-128)*ct+128;g=(g-128)*ct+128;b=(b-128)*ct+128;
+    const L=.299*r+.587*g+.114*b;
+    r=L+(r-L)*f.s;g=L+(g-L)*f.s;b=L+(b-L)*f.s;
+    if(sp){const tr=.393*r+.769*g+.189*b,tg=.349*r+.686*g+.168*b,tb=.272*r+.534*g+.131*b;r+=(tr-r)*sp;g+=(tg-g)*sp;b+=(tb-b)*sp}
+    if(fd){r=r*(1-fd)+f.f;g=g*(1-fd)+f.f;b=b*(1-fd)+f.f}
+    p[i]=r;p[i+1]=g;p[i+2]=b;
+  }
+  w.putImageData(d,0,0);
+  if(f.so){tc.width=Math.max(8,iw>>3);tc.height=Math.max(8,ih>>3);tc.getContext('2d').drawImage(wc,0,0,tc.width,tc.height);
+    w.globalAlpha=f.so;w.globalCompositeOperation='screen';w.drawImage(tc,0,0,iw,ih);w.globalAlpha=1;w.globalCompositeOperation='source-over'}
+  if(f.gr){w.save();w.globalCompositeOperation='overlay';w.globalAlpha=Math.min(1,f.gr);
+    w.translate(-Math.random()*160,-Math.random()*160);w.fillStyle=w.createPattern(nz,'repeat');w.fillRect(0,0,iw+160,ih+160);w.restore()}
+  if(f.v){const g=w.createRadialGradient(iw/2,ih/2,Math.min(iw,ih)*.3,iw/2,ih/2,Math.max(iw,ih)*.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${f.v*1.3})`);w.fillStyle=g;w.fillRect(0,0,iw,ih)}
+  if(f.fl){const g=w.createRadialGradient(iw/2,ih*.45,0,iw/2,ih*.45,iw*.7);g.addColorStop(0,'rgba(255,245,230,.28)');g.addColorStop(1,'rgba(255,245,230,0)');w.globalCompositeOperation='screen';w.fillStyle=g;w.fillRect(0,0,iw,ih);w.globalCompositeOperation='source-over'}
+  if(f.lk){w.globalCompositeOperation='screen';let g=w.createLinearGradient(iw,0,iw*.45,ih*.3);g.addColorStop(0,`rgba(255,110,30,${.75*f.lk})`);g.addColorStop(1,'rgba(255,60,60,0)');w.fillStyle=g;w.fillRect(0,0,iw,ih);
+    g=w.createLinearGradient(0,ih,iw*.4,ih*.7);g.addColorStop(0,`rgba(255,200,80,${.5*f.lk})`);g.addColorStop(1,'rgba(255,200,80,0)');w.fillStyle=g;w.fillRect(0,0,iw,ih);w.globalCompositeOperation='source-over'}
+  if(f.du){for(let i=0;i<45;i++){w.fillStyle=Math.random()>.4?'rgba(255,255,255,.7)':'rgba(0,0,0,.5)';const s=Math.random()*iw*.006+1;w.beginPath();w.arc(Math.random()*iw,Math.random()*ih,s,0,7);w.fill()}
+    w.strokeStyle='rgba(255,255,255,.35)';w.lineWidth=1;for(let i=0;i<4;i++){const px=Math.random()*iw;w.beginPath();w.moveTo(px,Math.random()*ih*.3);w.lineTo(px+Math.random()*8-4,ih*(.5+Math.random()*.5));w.stroke()}}
+  if(f.sc){w.fillStyle='rgba(0,0,0,.16)';const st=Math.max(3,Math.round(ih/160));for(let y=0;y<ih;y+=st*2)w.fillRect(0,y,iw,st);
+    w.fillStyle='rgba(255,255,255,.06)';w.fillRect(0,(Date.now()/12%ih),iw,ih*.04)}
+  const fs=Math.round(iw*.05);w.font=`bold ${fs}px "Courier New",monospace`;w.textBaseline='alphabetic';
+  const mon=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][new Date().getMonth()],dd=new Date().getDate();
+  if(f.dt===1){w.textAlign='left';w.fillStyle='#ff9a1f';w.shadowColor='#ff5a00';w.shadowBlur=fs*.4;w.fillText(`${mon} ${dd} '98`,iw*.05,ih-iw*.05);w.shadowBlur=0}
+  if(f.dt===2){w.textAlign='left';w.fillStyle='#fff';w.shadowColor='#000';w.shadowBlur=4;w.fillText('● REC',iw*.05,fs*1.6);w.fillText('PLAY ▶',iw*.05,ih-iw*.12);w.fillText(`${mon} ${dd} 1998`,iw*.05,ih-iw*.05);w.shadowBlur=0}
+  x.drawImage(wc,ox,oy);
+  // watermark
+  const wf=Math.max(9,Math.round(W*.03));x.font=`600 ${wf}px "Trebuchet MS",sans-serif`;x.textAlign='right';x.textBaseline='alphabetic';
+  if(f.fr){x.fillStyle='rgba(70,55,40,.8)';x.fillText('Captured by mypic',W-W*.06,H-W*.05)}
+  else{x.fillStyle='rgba(255,255,255,.88)';x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=wf*.3;x.fillText('Captured by mypic',W-W*.035,H-W*.035);x.shadowBlur=0}
+}
+
+function source(){return live?vid:(vf||img||sample)}
+let last=0;
+function loop(t){requestAnimationFrame(loop);if(t-last<60)return;last=t;
+  try{if(recorder){render(rc,540,720,F[cur],source(),live&&face==='user');vx.drawImage(rc,0,0,360,480)}
+  else render(view,360,480,F[cur],source(),live&&face==='user')}catch(e){}}
+
+let cameraStarting=false;
+async function start(){
+  if(cameraStarting)return;
+  cameraStarting=true;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  live=false;
+
+  const help=$('#allow p');
+  try{
+    if(!window.isSecureContext){
+      throw new Error('INSECURE_CONTEXT');
+    }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      throw new Error('CAMERA_UNAVAILABLE');
+    }
+
+    stream=await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{
+        facingMode:{ideal:face},
+        width:{ideal:1280},
+        height:{ideal:960}
+      }
+    });
+    vid.srcObject=stream;
+    await vid.play();
+    live=true;
+    img=null;
+    vf=null;
+    $('#allow').style.display='none';
+    toast('Camera ready ✓');
+  }catch(e){
+    live=false;
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+    $('#allow').style.display='block';
+
+    let message='Camera could not start. Allow camera access in your browser settings, then tap Retry.';
+    if(e.message==='INSECURE_CONTEXT'){
+      message='Camera access requires a secure HTTPS website (or localhost). Open this app from its HTTPS address.';
+    }else if(e.message==='CAMERA_UNAVAILABLE'){
+      message='This preview does not provide camera access. Open the app directly in your browser using its HTTPS website.';
+    }else if(e.name==='NotAllowedError' || e.name==='PermissionDeniedError'){
+      message='Camera permission was denied or blocked. Allow camera access for this website in your browser settings, then tap Retry.';
+    }else if(e.name==='NotFoundError' || e.name==='DevicesNotFoundError'){
+      message='No camera was found on this device.';
+    }else if(e.name==='NotReadableError' || e.name==='TrackStartError'){
+      message='The camera may already be in use by another app. Close it and tap Retry.';
+    }else if(window.self!==window.top){
+      message='The embedded preview may block camera access. Open this app in a full browser tab and allow camera permission.';
+    }
+    help.textContent=message;
+    toast('Camera unavailable – see the message');
+  }finally{
+    cameraStarting=false;
+  }
+}
+$('#tryl').onclick=start;
+$('#ncam').onclick=nativeCam;
+$('#full').onclick=()=>window.open(location.href,'_blank','noopener');
+function toast(t){const m=$('#msg');m.textContent=t;m.style.opacity=1;clearTimeout(m._t);m._t=setTimeout(()=>m.style.opacity=0,2200)}
+
+// filters strip
+const strip=$('#strip');
+F.forEach((f,i)=>{const b=document.createElement('button');b.className='chip';b.textContent=f.n;b.onclick=()=>pick(i);strip.appendChild(b)});
+function pick(i){cur=i;[...strip.children].forEach((c,j)=>c.classList.toggle('on',j===i));strip.children[i].scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});$('#fname').textContent=`${i+1}/${F.length} · ${F[i].n}`}
+pick(0);
+
+// gallery storage (IndexedDB, memory fallback)
+let mem=[],idb=null;
+try{const rq=indexedDB.open('mypic',1);rq.onupgradeneeded=()=>rq.result.createObjectStore('p',{keyPath:'id'});rq.onsuccess=()=>{idb=rq.result;load()};rq.onerror=()=>{}}catch(e){}
+function tx(m){return idb.transaction('p',m).objectStore('p')}
+function load(){if(!idb)return;try{const r=tx('readonly').getAll();r.onsuccess=()=>{mem=r.result.sort((a,b)=>b.id-a.id);thumb()}}catch(e){}}
+function save(o){mem.unshift(o);if(idb)try{tx('readwrite').put(o)}catch(e){}thumb()}
+function del(id){mem=mem.filter(o=>o.id!==id);if(idb)try{tx('readwrite').delete(id)}catch(e){}thumb()}
+function thumb(){const t=$('#thumb');if(mem[0]){t.style.backgroundImage=`url(${mem[0].d})`;t.textContent=''}else{t.style.backgroundImage='';t.textContent='▦'}}
+
+// capture
+$('#shut').onclick=()=>{
+  if(!live&&!img&&!vf&&!recorder)return nativeCam();
+  if(mode==='video')return toggleRec();
+  const c=document.createElement('canvas');
+  render(c,1080,1440,F[cur],source(),live&&face==='user');
+  save({id:Date.now(),d:c.toDataURL('image/jpeg',.9),f:F[cur].n});
+  const fl=$('#flash');fl.style.transition='none';fl.style.opacity=.8;requestAnimationFrame(()=>{fl.style.transition='opacity .35s';fl.style.opacity=0});
+  toast('Saved to gallery ✓');if(!live){img=null;$('#allow').style.display='block'}
+};
+$('#flip').onclick=()=>{face=face==='user'?'environment':'user';start()};
+$('#up').onclick=()=>{const f=$('#file');f.removeAttribute('capture');f.accept='image/*,video/*';f.click()};
+$('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const u=URL.createObjectURL(f);
+  if(f.type.startsWith('video')){const v=document.createElement('video');v.playsInline=true;v.muted=true;v.loop=true;v.src=u;v.play().catch(()=>{});vf=v;img=null;live=false;if(stream)stream.getTracks().forEach(t=>t.stop());$('#allow').style.display='none';document.querySelector('.mt[data-m=video]').click();toast('Video loaded – pick a filter, then tap the red button to save it')}
+  else{const i=new Image();i.onload=()=>{img=i;vf=null;live=false;if(stream)stream.getTracks().forEach(t=>t.stop());$('#allow').style.display='none';toast('Photo loaded – pick a filter & tap the shutter')};i.src=u}
+  e.target.value=''};
+
+// gallery UI
+function openGal(){const g=$('#grid');g.innerHTML='';if(!mem.length)g.innerHTML='<div id="empty">No photos yet.<br>Take one with the shutter button.</div>';
+  mem.forEach(o=>{const cell=document.createElement('div');cell.className='cell';const im=document.createElement('img');im.src=o.d;im.alt=o.f;im.onclick=()=>show(o);cell.appendChild(im);if(o.blob){const pb=document.createElement('span');pb.className='pb';pb.textContent='▶ video';cell.appendChild(pb)}g.appendChild(cell)});$('#gal').classList.add('open')}
+let sel=null;
+function show(o){sel=o;const v=$('#bvid'),i=$('#bimg');if(o.blob){i.style.display='none';v.style.display='block';v.src=URL.createObjectURL(o.blob)}else{v.pause();v.removeAttribute('src');v.style.display='none';i.style.display='block';i.src=o.d}$('#big').classList.add('open')}
+$('#thumb').onclick=openGal;$('#gx').onclick=()=>$('#gal').classList.remove('open');
+$('#bx').onclick=()=>{$('#bvid').pause();$('#big').classList.remove('open')};
+$('#bdel').onclick=()=>{if(sel){del(sel.id);$('#big').classList.remove('open');openGal()}};
+$('#bshare').onclick=async()=>{
+  if(!sel)return;const b=sel.blob||await (await fetch(sel.d)).blob();const ext=sel.blob?(b.type.includes('mp4')?'mp4':'webm'):'jpg';const file=new File([b],`mypic-${sel.id}.${ext}`,{type:b.type||'image/jpeg'});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}catch(e){if(e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=file.name;document.body.appendChild(a);a.click();a.remove();
+  toast('If nothing downloaded, long-press the photo to save');
+};
+// photo / video mode + recording of the filtered canvas (with watermark)
+let mode='photo',recorder=null,chunks=[],rt=0,rtimer=null,busy=false,vf=null;
+function nativeCam(){const f=$('#file');f.accept=mode==='video'?'video/*':'image/*';f.setAttribute('capture',face==='user'?'user':'environment');f.click()}
+const rc=document.createElement('canvas');rc.width=540;rc.height=720;
+document.querySelectorAll('.mt').forEach(b=>b.onclick=()=>{if(recorder)return;mode=b.dataset.m;document.querySelectorAll('.mt').forEach(x=>x.classList.toggle('on',x===b));$('#shut').classList.toggle('vid',mode==='video')});
+async function toggleRec(){
+  if(recorder){recorder.stop();return}
+  if(busy)return;busy=true;
+  if(typeof MediaRecorder==='undefined'||!rc.captureStream){busy=false;toast('Video recording is not supported in this browser');return}
+  render(rc,540,720,F[cur],source(),live&&face==='user');
+  const cs=rc.captureStream(30);let mic=null;
+  if(vf&&!live){try{vf.muted=false;vf.loop=false;vf.currentTime=0;await vf.play();const vs=vf.captureStream?vf.captureStream():vf.mozCaptureStream();vs.getAudioTracks().forEach(t=>cs.addTrack(t))}catch(e){}}
+  else try{mic=await navigator.mediaDevices.getUserMedia({audio:true});mic.getAudioTracks().forEach(t=>cs.addTrack(t))}catch(e){toast('Recording without sound (microphone not allowed)')}
+  const mt=['video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+  chunks=[];let r;
+  try{r=new MediaRecorder(cs,mt?{mimeType:mt}:undefined)}catch(e){busy=false;toast('Could not start recording');return}
+  r.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  r.onstop=()=>{
+    clearInterval(rtimer);$('#rec').style.display='none';$('#shut').classList.remove('rec');
+    if(mic)mic.getTracks().forEach(t=>t.stop());
+    const blob=new Blob(chunks,{type:r.mimeType||mt||'video/webm'});
+    save({id:Date.now(),d:rc.toDataURL('image/jpeg',.7),f:F[cur].n,blob});
+    recorder=null;busy=false;if(vf&&!live){vf.pause();vf=null;$('#allow').style.display='block'}toast('Video saved to gallery ✓')};
+  r.start(500);recorder=r;rt=0;if(vf&&!live)vf.onended=()=>{if(recorder)recorder.stop()};
+  const rec=$('#rec');rec.textContent='● 00:00';rec.style.display='block';$('#shut').classList.add('rec');
+  rtimer=setInterval(()=>{rt++;rec.textContent='● '+String(rt/60|0).padStart(2,'0')+':'+String(rt%60).padStart(2,'0')},1000);
+}
+requestAnimationFrame(loop);
+// Automatically request live camera access as soon as the app opens.
+start();
+</script>
+</body>
+</html>
